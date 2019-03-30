@@ -24,6 +24,7 @@ namespace OrchardCore.Media.Controllers
             ".png",
             ".gif",
             ".ico",
+            ".svg",
 
             // Documents
             ".pdf", // (Portable Document Format; Adobe Acrobat)
@@ -198,6 +199,36 @@ namespace OrchardCore.Media.Controllers
             foreach (var file in files)
             {
                 // TODO: support clipboard
+
+                if (!allowedFileExtensions.Contains(Path.GetExtension(file.FileName), StringComparer.OrdinalIgnoreCase))
+                {
+                    result.Add(new
+                    {
+                        name = file.FileName,
+                        size = file.Length,
+                        folder = path,
+                        error = T["This file extension is not allowed: {0}", Path.GetExtension(file.FileName)].ToString()
+                    });
+
+                    _logger.LogInformation($"File extension not allowed: '{file.FileName}'");
+
+                    continue;
+                }                
+
+                if (file.Length > maxFileSize)
+                {
+                    result.Add(new
+                    {
+                        name = file.FileName,
+                        size = file.Length,
+                        folder = path,
+                        error = T["The file {0} is too big. The limit is {1}MB", file.FileName, (int)Math.Floor((double) maxFileSize / 1024 / 1024)].ToString()
+                    });
+
+                    _logger.LogInformation($"File too big: '{file.FileName}' ({file.Length}B)");
+
+                    continue;
+                }
 
                 if (!allowedFileExtensions.Contains(Path.GetExtension(file.FileName), StringComparer.OrdinalIgnoreCase))
                 {
